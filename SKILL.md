@@ -121,25 +121,30 @@ Send via the `tg_send` zsh function (Bash: `zsh -ic 'tg_send "<msg>"'`) or, if r
 
 Format (omit empty groups):
 
+Each skill/tool name must be a Telegram Markdown hyperlink. Derive the URL from the `source` field:
+
+- `github:owner/repo` → `https://github.com/owner/repo`
+- `github:owner/repo/subpath` → `https://github.com/owner/repo`
+
 ```
 📦 Skills Report — <total> candidates (<YYYY-MM-DD>)
 
 — SKILLS —
 [Flutter]
-① <name> ⭐<stars> — <summary>
+① [<name>](https://github.com/owner/repo) ⭐<stars> — <summary>
 
 [UI/UX]
-② <name> ⭐<stars> — <summary>
+② [<name>](https://github.com/owner/repo) ⭐<stars> — <summary>
 
 [Agent/AI]
-③ <name> ⭐<stars> — <summary>
+③ [<name>](https://github.com/owner/repo) ⭐<stars> — <summary>
 
 — TOOLS —
 [Coding agents]
-④ <name> ⭐<stars> — <summary>
+④ [<name>](https://github.com/owner/repo) ⭐<stars> — <summary>
 
 [Agent frameworks]
-⑤ <name> ⭐<stars> — <summary>
+⑤ [<name>](https://github.com/owner/repo) ⭐<stars> — <summary>
 
 Reply: install 1 3 5 | install all | skip all | details 2
 (Full list: <SKILL_HOME>/skill-candidates.yaml)
@@ -174,8 +179,26 @@ Before parsing the reply, check `<SKILL_HOME>/skill-candidates.yaml`:
 For each approved candidate, branch on `track`:
 
 **Skills track:**
+
+First detect the host type from `<SKILL_HOME>`:
+
+- **Hermes host**: `<SKILL_HOME>` path contains `.hermes` (e.g. `$HOME/.hermes/`)
+- **Claude Code host** (default): all other paths
+
+**If Hermes host:**
+
+- Construct the raw GitHub URL from `github:owner/repo[/subpath]`:
+  - Full-repo skill: `https://raw.githubusercontent.com/owner/repo/main/SKILL.md`
+  - Subdirectory skill: `https://raw.githubusercontent.com/owner/repo/main/subpath/SKILL.md`
+- Run: `hermes skills install <url> --name <name>`
+  - The `--name` flag ensures the installed skill name matches the registry entry even if the SKILL.md frontmatter differs.
+  - Hermes copies the skill to `~/.hermes/skills/` and registers it internally — no `.source` file needed.
+
+**If Claude Code host:**
+
 - If source matches a Claude marketplace, use `claude plugin install` semantics where possible.
 - Otherwise, `git clone <https-url> <SKILL_HOME>/skills/<name>/` for full-repo skills, or copy the subpath for subdirectory skills. Drop a `.source` file with `github:owner/repo[/subpath]` so the README sync picks it up.
+
 - Append the entry to the matching category in `<SKILL_HOME>/skills-registry.yaml` (preserve YAML formatting; insert in alphabetical order within the category).
 
 **Tools track:**
