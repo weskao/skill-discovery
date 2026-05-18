@@ -17,9 +17,10 @@ Run on a cron, or invoke manually with `/skill-discovery`.
 The skill detects its host project's home directory at runtime, so the same install works under any `<project>/skills/<skill-name>/` layout.
 
 | Install location | `<project-home>` resolves to |
-|---|---|
+| --- | --- |
 | `~/.claude/skills/skill-discovery/` | `~/.claude/` |
 | `~/.openclaw/skills/skill-discovery/` | `~/.openclaw/` |
+| `<project_root>/.claude/skills/skill-discovery/` | `<project_root>/.claude/` |
 | `<anywhere>/skills/skill-discovery/` | `<anywhere>/` |
 
 State files (`skills-registry.yaml`, `skill-candidates.yaml`, `log/`) always live directly under `<project-home>`.
@@ -40,12 +41,22 @@ git clone https://github.com/weskao/skill-discovery.git \
   ~/.openclaw/skills/skill-discovery
 ```
 
+For a project-local install (scoped to the current project's `.claude/`):
+
+```bash
+# Run from your project root
+git clone https://github.com/weskao/skill-discovery.git \
+  .claude/skills/skill-discovery
+```
+
+State files (`skills-registry.yaml`, `skill-candidates.yaml`, `log/`) will live under `<project_root>/.claude/` rather than your global `~/.claude/`.
+
 The first time you run `/skill-discovery`, Step 0 auto-creates `<project-home>/skills-registry.yaml` from the bundled template.
 
 ## 📋 Requirements
 
 | Required | Used for | If missing |
-|---|---|---|
+| --- | --- | --- |
 | Claude Code (or compatible host) | Runs the skill | n/a |
 | `mcp__github__*` MCP tools | GitHub search & file fetch | Discovery cannot run |
 
@@ -86,7 +97,7 @@ The skill is **designed to degrade gracefully**:
 
 ### Mode A — Discovery (read-only on registry)
 
-```
+```text
 Step 0: Bootstrap — create <project-home>/skills-registry.yaml from template if missing
 Step 1: Read registry, build KNOWN_SKILLS / KNOWN_TOOLS sets
 Step 2-3: Search GitHub (skills track + tools track)
@@ -97,7 +108,7 @@ Step 6: Send Telegram shortlist (or log to file on fallback)
 
 ### Mode B — Install via approval reply
 
-```
+```text
 You: install 1 3 5
 Skill: git clone the 3 approved skills into <project-home>/skills/<name>/
 Skill: append entries to skills-registry.yaml (so they're skipped next run)
@@ -115,8 +126,9 @@ Edit `<project-home>/skills-registry.yaml` to tune what gets discovered:
 | Tools  | `agent_frameworks`, `coding_agents`, `workflow_automation`, `developer_tooling` |
 
 - `watchlist.orgs` — GitHub orgs known to publish skills
-- `watchlist.github_topics` — topic tags to search (default: `claude-skill`, `claude-code-skill`, `claude-skills`)
-- `watchlist.tool_keywords` — broader keywords for the tools track
+- `watchlist.github_topics` — topic tags to search across all of GitHub
+- `watchlist.skill_keywords` — free-text keywords for the skills track (catches repos without a standard topic tag)
+- `watchlist.tool_keywords` — free-text keywords for the tools track
 - `watchlist.awesome_lists` — curated lists to parse
 - `watchlist.categories_of_interest` — categories that get a +4 scoring boost
 
@@ -127,7 +139,7 @@ Your manual edits to `watchlist` are preserved — the skill only ever **appends
 All paths are relative to the host project's `<project-home>` (e.g. `~/.claude/` or `~/.openclaw/`):
 
 | Path | Owner | Lifecycle |
-|---|---|---|
+| --- | --- | --- |
 | `<project-home>/skills/skill-discovery/SKILL.md` | This repo | Updated via `git pull` |
 | `<project-home>/skills/skill-discovery/skills-registry.template.yaml` | This repo | Bundled default — seeds your registry on first run only |
 | `<project-home>/skills-registry.yaml` | **You** | Created from template; append-only updates when you approve installs |
@@ -145,7 +157,7 @@ All paths are relative to the host project's `<project-home>` (e.g. `~/.claude/`
 
 Pair with a `/schedule` skill (if your host provides one) or any cron mechanism to run daily. Use whichever CLI binary your host installs — e.g. `claude` for Claude Code, `openclaw` for openclaw:
 
-```
+```cron
 0 9 * * *   claude /skill-discovery       # Claude Code
 0 9 * * *   openclaw /skill-discovery     # openclaw
 ```
