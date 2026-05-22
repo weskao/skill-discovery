@@ -5,7 +5,7 @@ description: Daily discovery of new Claude Code skills AND adjacent AI/agent too
 
 # Skill Discovery — Daily Curation Agent
 
-Run this when (a) the daily cron fires, (b) the user explicitly invokes it, or (c) the user replies via Telegram to a previous discovery report with an install/skip instruction.
+Run this when (a) the daily cron fires, (b) the user explicitly invokes it — optionally with a keyword to scope the search (e.g. `/skill-discovery memory`), or (c) the user replies via Telegram to a previous discovery report with an install/skip instruction.
 
 ## Resolving `<SKILL_HOME>`
 
@@ -20,6 +20,14 @@ Throughout this document, **`<SKILL_HOME>`** refers to the **host project's home
 - **Always resolve dynamically.** Never hardcode `.claude` — the same skill code must work for any host project.
 
 All state files (`skills-registry.yaml`, `skill-candidates.yaml`, `log/`) live directly under `<SKILL_HOME>`.
+
+## Arguments
+
+| Argument | Type | Description |
+| --- | --- | --- |
+| `<KEYWORD>` | optional string | When provided, all GitHub searches in Steps 2 and 3 are scoped to this single keyword only. The full watchlist loops (topics, orgs, awesome lists) are skipped. Steps 4–6 run as normal on the narrowed candidate set. |
+
+Example: `/skill-discovery memory` — discovers only memory-related skills and tools.
 
 ## Mode A — Discovery run
 
@@ -62,6 +70,10 @@ Also load:
 
 ### Step 2. Search — Skills track
 
+**If `<KEYWORD>` was provided:** skip the watchlist loops entirely. Run a single `mcp__github__search_repositories` call with `<KEYWORD>` as the query, sort by stars, take top 20. Use those results as the full skills-track candidate set. Proceed to "extract fields" below.
+
+**Otherwise (no keyword):**
+
 For each `github_topic`: call `mcp__github__search_repositories` with query `topic:<topic>`, sort by stars, take top 20.
 
 For each keyword in `watchlist.skill_keywords`: call `mcp__github__search_repositories` with that keyword as the query, sort by stars, take top 10. This catches repos that publish skills without using a standard topic tag.
@@ -77,6 +89,10 @@ For each found skill, extract:
 - `category` — infer from name + summary: `flutter` | `ui_ux` | `agent_ai` | `automation_production` | `mindset` | `other`
 
 ### Step 3. Search — Tools track
+
+**If `<KEYWORD>` was provided:** skip the watchlist loops entirely. Run a single `mcp__github__search_repositories` call with `<KEYWORD>` as the query, sort by stars, take top 10. Use those results as the full tools-track candidate set. Proceed to "extract fields" below.
+
+**Otherwise (no keyword):**
 
 For each keyword in `watchlist.tool_keywords`: call `mcp__github__search_repositories`, sort by stars, take top 10.
 
@@ -112,11 +128,12 @@ If 0 candidates remain after diff: send Telegram `📦 Skills Report (<date>): N
 Merge the new batch into `<SKILL_HOME>/skill-candidates.yaml` using the following algorithm:
 
 1. **Read existing entries** — if the file exists and `candidates:` is non-empty, load those entries as the *existing set*. If the file is absent or empty, the existing set is empty.
-2. **Merge new batch** — for each candidate in the top-6/top-4 new batch, look up a match in the existing set (match on `source` first, fall back to `name`):
+2. **Keyword pre-filter** — if `<KEYWORD>` was provided, drop from the existing set any entry whose `name` and `summary` both do not contain `<KEYWORD>` (case-insensitive). This keeps the candidates file scoped to the current search intent and prevents stale unrelated entries from polluting the shortlist.
+3. **Merge new batch** — for each candidate in the top-6/top-4 new batch, look up a match in the existing set (match on `source` first, fall back to `name`):
    - Match found → replace the existing entry with the fresh one (updated stars/score/summary).
    - No match → the candidate is new, add it.
-3. **Refresh found-but-not-top existing entries** — for each remaining existing entry NOT already updated in step 2, check whether its name/source appeared anywhere in the raw search results (Steps 2–3, before the top-6/4 cutoff). If it was found, update its `stars`, `score`, and `summary` from the fresh data. If it was not found at all in this run's searches, leave it unchanged.
-4. **Re-index** — after the merge, renumber all entries sequentially from 1 (skills first, then tools) and write the file:
+4. **Refresh found-but-not-top existing entries** — for each remaining existing entry NOT already updated in step 3, check whether its name/source appeared anywhere in the raw search results (Steps 2–3, before the top-6/4 cutoff). If it was found, update its `stars`, `score`, and `summary` from the fresh data. If it was not found at all in this run's searches, leave it unchanged.
+5. **Re-index** — after the merge, renumber all entries sequentially from 1 (skills first, then tools) and write the file:
 
 ```yaml
 candidates:
@@ -152,7 +169,7 @@ If running in a Telegram-channel session instead, use the Telegram MCP `reply` t
 
 If openclaw is unavailable, log to `<SKILL_HOME>/log/skill-discovery.log` and exit non-zero.
 
-**Format** (omit empty groups, write to `/tmp/skill_report.md`):
+**Format** (omit empty groups; `[…]` in the template below means include that segment only when the condition applies; write to `/tmp/skill_report.md`):
 
 Each skill/tool name must be a Telegram Markdown hyperlink `[name](url)`. Derive the URL from the `source` field:
 
@@ -162,7 +179,7 @@ Each skill/tool name must be a Telegram Markdown hyperlink `[name](url)`. Derive
 Avoid `_` (underscore) in summaries — use a space or omit instead to prevent unintended italics in Telegram's Markdown parser.
 
 ```text
-📦 Skills Report — <total> candidates (<YYYY-MM-DD>)
+📦 Skills Report — <total> candidates (<YYYY-MM-DD>)[ · keyword: <KEYWORD>]
 
 — SKILLS —
 [Flutter]
@@ -212,7 +229,7 @@ Before parsing the reply, check `<SKILL_HOME>/skill-candidates.yaml`:
 ### Parse the command
 
 | Reply pattern | Action |
-|---|---|
+| --- | --- |
 | `install <i> <j> ...` | Install candidates with those indices |
 | `install all` | Install every candidate in the file |
 | `skip all` / `skip` | Discard the candidates file, no installs |
