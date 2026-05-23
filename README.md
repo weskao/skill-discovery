@@ -1,8 +1,8 @@
-# Skill Discovery 🚀
+# Skills Discovery 🚀
 
 A daily curation agent for [Claude Code](https://claude.com/claude-code) and compatible variants. Discovers new skills and adjacent AI/agent tools from GitHub, scores them by category fit and popularity, and surfaces a top-10 shortlist for one-tap approval.
 
-Run on a cron, or invoke manually with `/skill-discovery`.
+Run on a cron, or invoke manually with `/skills-discovery`.
 
 ## ✨ Features
 
@@ -18,10 +18,10 @@ The skill detects its host project's home directory at runtime, so the same inst
 
 | Install location | `<project-home>` resolves to |
 | --- | --- |
-| `~/.claude/skills/skill-discovery/` | `~/.claude/` |
-| `~/.openclaw/skills/skill-discovery/` | `~/.openclaw/` |
-| `<project_root>/.claude/skills/skill-discovery/` | `<project_root>/.claude/` |
-| `<anywhere>/skills/skill-discovery/` | `<anywhere>/` |
+| `~/.claude/skills/skills-discovery/` | `~/.claude/` |
+| `~/.openclaw/skills/skills-discovery/` | `~/.openclaw/` |
+| `<project_root>/.claude/skills/skills-discovery/` | `<project_root>/.claude/` |
+| `<anywhere>/skills/skills-discovery/` | `<anywhere>/` |
 
 State files (`skills-registry.yaml`, `skill-candidates.yaml`, `log/`) always live directly under `<project-home>`.
 
@@ -30,28 +30,28 @@ State files (`skills-registry.yaml`, `skill-candidates.yaml`, `log/`) always liv
 For default Claude Code:
 
 ```bash
-git clone https://github.com/weskao/skill-discovery.git \
-  ~/.claude/skills/skill-discovery
+git clone https://github.com/weskao/skills-discovery.git \
+  ~/.claude/skills/skills-discovery
 ```
 
 For openclaw (or any other host):
 
 ```bash
-git clone https://github.com/weskao/skill-discovery.git \
-  ~/.openclaw/skills/skill-discovery
+git clone https://github.com/weskao/skills-discovery.git \
+  ~/.openclaw/skills/skills-discovery
 ```
 
 For a project-local install (scoped to the current project's `.claude/`):
 
 ```bash
 # Run from your project root
-git clone https://github.com/weskao/skill-discovery.git \
-  .claude/skills/skill-discovery
+git clone https://github.com/weskao/skills-discovery.git \
+  .claude/skills/skills-discovery
 ```
 
 State files (`skills-registry.yaml`, `skill-candidates.yaml`, `log/`) will live under `<project_root>/.claude/` rather than your global `~/.claude/`.
 
-The first time you run `/skill-discovery`, Step 0 auto-creates `<project-home>/skills-registry.yaml` from the bundled template.
+The first time you run `/skills-discovery`, Step 0 auto-creates `<project-home>/skills-registry.yaml` from the bundled template.
 
 ## 📋 Requirements
 
@@ -90,7 +90,7 @@ If you have the `telegram` MCP plugin installed and are running inside a Telegra
 The skill is **designed to degrade gracefully**:
 
 - **Mode A (discovery) still works.** The shortlist is always written to `<project-home>/skill-candidates.yaml`. Open and review it manually.
-- **A failed `tg_send` is logged** to `<project-home>/log/skill-discovery.log` rather than crashing the run.
+- **A failed `tg_send` is logged** to `<project-home>/log/skills-discovery.log` rather than crashing the run.
 - **Mode B (install via reply) becomes manual.** Instead of replying on Telegram, re-invoke the skill with explicit indices — e.g. ask Claude: *"From `<project-home>/skill-candidates.yaml`, install candidates 1, 3, and 5."*
 
 ## ⚙️ How it works
@@ -140,11 +140,11 @@ All paths are relative to the host project's `<project-home>` (e.g. `~/.claude/`
 
 | Path | Owner | Lifecycle |
 | --- | --- | --- |
-| `<project-home>/skills/skill-discovery/SKILL.md` | This repo | Updated via `git pull` |
-| `<project-home>/skills/skill-discovery/skills-registry.template.yaml` | This repo | Bundled default — seeds your registry on first run only |
+| `<project-home>/skills/skills-discovery/SKILL.md` | This repo | Updated via `git pull` |
+| `<project-home>/skills/skills-discovery/skills-registry.template.yaml` | This repo | Bundled default — seeds your registry on first run only |
 | `<project-home>/skills-registry.yaml` | **You** | Created from template; append-only updates when you approve installs |
 | `<project-home>/skill-candidates.yaml` | Skill (ephemeral) | Merged across runs (deduplicated by source/name); cleared after install/skip |
-| `<project-home>/log/skill-discovery.log` | Skill (fallback) | Written only when `tg_send` is unavailable |
+| `<project-home>/log/skills-discovery.log` | Skill (fallback) | Written only when `tg_send` is unavailable |
 
 ## 🛡️ Safety rails
 
@@ -158,8 +158,8 @@ All paths are relative to the host project's `<project-home>` (e.g. `~/.claude/`
 Pair with a `/schedule` skill (if your host provides one) or any cron mechanism to run daily. Use whichever CLI binary your host installs — e.g. `claude` for Claude Code, `openclaw` for openclaw:
 
 ```cron
-0 9 * * *   claude /skill-discovery       # Claude Code
-0 9 * * *   openclaw /skill-discovery     # openclaw
+0 9 * * *   claude /skills-discovery       # Claude Code
+0 9 * * *   openclaw /skills-discovery     # openclaw
 ```
 
 A morning report keeps your skill library fresh without you having to remember.

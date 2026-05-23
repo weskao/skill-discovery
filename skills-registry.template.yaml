@@ -1,5 +1,5 @@
 # Skills Registry — Template
-# This file ships with the skill-discovery skill. On first run, it is copied
+# This file ships with the skills-discovery skill. On first run, it is copied
 # to $HOME/.claude/skills-registry.yaml if that file does not exist.
 #
 # Once copied, your personal registry lives at ~/.claude/skills-registry.yaml

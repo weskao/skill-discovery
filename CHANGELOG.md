@@ -1,3 +1,13 @@
+# Changelog
+
+## [Unreleased]
+
+### 🔒 Security
+
+- *(discovery)* Sanitize GitHub-fetched `name` and `summary` fields before persisting — strip control chars, detect injection patterns, replace with `[summary withheld]` if triggered
+- *(discovery)* Validate `name` against `^[A-Za-z0-9_.-]+$` before git clone to prevent path traversal
+- *(safety-rails)* Explicitly declare GitHub content as untrusted data in Steps 2, 3, and Safety rails
+
 ## [0.4.0] - 2026-05-22
 
 ### 🚀 Features
@@ -37,7 +47,7 @@
 
 ### 🚀 Features
 
-- Initial skill-discovery release
+- Initial skills-discovery release
 - Project-aware skill home (no more hardcoded .claude)
 
 ### 📚 Documentation
