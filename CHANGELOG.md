@@ -1,19 +1,22 @@
-# Changelog
+## [0.5.0] - 2026-05-24
 
-## [Unreleased]
+### 🚀 Features
 
-### 🔒 Security
+- *(discovery)* Add security category to skills and tools tracks
 
-- *(discovery)* Sanitize GitHub-fetched `name` and `summary` fields before persisting — strip control chars, detect injection patterns, replace with `[summary withheld]` if triggered
-- *(discovery)* Validate `name` against `^[A-Za-z0-9_.-]+$` before git clone to prevent path traversal
-- *(safety-rails)* Explicitly declare GitHub content as untrusted data in Steps 2, 3, and Safety rails
+### 🚜 Refactor
 
+- [**breaking**] Rename skill-discovery → skills-discovery
 ## [0.4.0] - 2026-05-22
 
 ### 🚀 Features
 
 - *(security)* Harden reply protocol against injection
 - *(discovery)* Add optional keyword arg to scope searches
+
+### 📚 Documentation
+
+- *(changelog)* Release v0.4.0
 ## [0.3.0] - 2026-05-21
 
 ### 🚀 Features
@@ -47,7 +50,7 @@
 
 ### 🚀 Features
 
-- Initial skills-discovery release
+- Initial skill-discovery release
 - Project-aware skill home (no more hardcoded .claude)
 
 ### 📚 Documentation
