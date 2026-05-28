@@ -44,7 +44,7 @@ This step makes the skill work on first invocation with **zero manual setup**.
 
 2. **Log directory** — ensure `<SKILL_HOME>/log/` exists (`mkdir -p`). Needed for the `tg_send` fallback in Step 6.
 
-3. **Candidates file** — no action at this point. If the file already exists when Step 5 runs, it will be read and its entries will be merged with the new batch (see Step 5). Step 5 never blindly overwrites existing candidates.
+3. **Candidates file** — no action at this point. If the file already exists when Step 5 runs, it will be read and its entries will be merged with the new batch (see Step 5). Step 5 is **append-only with refresh** — it never deletes existing entries, regardless of mode or keyword.
 
 ### Step 1. Load the registry
 
@@ -133,15 +133,16 @@ If 0 candidates remain after diff: send Telegram `📦 Skills Report (<date>): N
 
 ### Step 5. Merge and write candidates file
 
+**Merge is always additive — existing entries are never deleted, regardless of whether `<KEYWORD>` was provided.** A keyword only narrows what enters the *new batch* via Steps 2–3; it does **not** filter or prune the existing file. Past discoveries from earlier runs (different keywords, different days, the full cron sweep) survive across keyword-scoped runs.
+
 Merge the new batch into `<SKILL_HOME>/skill-candidates.yaml` using the following algorithm:
 
 1. **Read existing entries** — if the file exists and `candidates:` is non-empty, load those entries as the *existing set*. If the file is absent or empty, the existing set is empty.
-2. **Keyword pre-filter** — if `<KEYWORD>` was provided, drop from the existing set any entry whose `name` and `summary` both do not contain `<KEYWORD>` (case-insensitive). This keeps the candidates file scoped to the current search intent and prevents stale unrelated entries from polluting the shortlist.
-3. **Merge new batch** — for each candidate in the top-6/top-4 new batch, look up a match in the existing set (match on `source` first, fall back to `name`):
+2. **Merge new batch** — for each candidate in the top-6/top-4 new batch, look up a match in the existing set (match on `source` first, fall back to `name`):
    - Match found → replace the existing entry with the fresh one (updated stars/score/summary).
-   - No match → the candidate is new, add it.
-4. **Refresh found-but-not-top existing entries** — for each remaining existing entry NOT already updated in step 3, check whether its name/source appeared anywhere in the raw search results (Steps 2–3, before the top-6/4 cutoff). If it was found, update its `stars`, `score`, and `summary` from the fresh data. If it was not found at all in this run's searches, leave it unchanged.
-5. **Re-index** — after the merge, renumber all entries sequentially from 1 (skills first, then tools) and write the file:
+   - No match → the candidate is new, **append** it to the existing set.
+3. **Refresh found-but-not-top existing entries** — for each remaining existing entry NOT already updated in step 2, check whether its name/source appeared anywhere in the raw search results (Steps 2–3, before the top-6/4 cutoff). If it was found, update its `stars`, `score`, and `summary` from the fresh data. If it was not found at all in this run's searches, **leave it unchanged** — never delete it just because it was outside this run's keyword scope.
+4. **Re-index** — after the merge, renumber all entries sequentially from 1 (skills first, then tools) and write the file:
 
 ```yaml
 candidates:
