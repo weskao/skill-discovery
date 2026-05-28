@@ -1,3 +1,8 @@
+## [0.5.1] - 2026-05-28
+
+### 🐛 Bug Fixes
+
+- *(discovery)* Make candidates merge append-only
 ## [0.5.0] - 2026-05-24
 
 ### 🚀 Features
@@ -7,6 +12,10 @@
 ### 🚜 Refactor
 
 - [**breaking**] Rename skill-discovery → skills-discovery
+
+### 📚 Documentation
+
+- *(changelog)* Release v0.5.0
 ## [0.4.0] - 2026-05-22
 
 ### 🚀 Features
